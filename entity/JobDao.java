@@ -6,6 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 import com.tcs.rakesh.validator.Description;
+import com.tcs.rakesh.validator.JobName;
 
 @Entity
 public class JobDao{
@@ -13,6 +14,7 @@ public class JobDao{
 	@GeneratedValue
 	private int jobid;
 	@Column(name="jobname")
+	@JobName
 	private String jobName;
 	
 	@NotNull(message="owner is mandatory")
@@ -22,7 +24,7 @@ public class JobDao{
 	private String description;
 	@NotNull(message="area is mandatory")
 	private String area;
-	private String jobkey;
+	private String jobKey;
 	public JobDao() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -34,7 +36,7 @@ public class JobDao{
 		this.owner = owner;
 		this.description = description;
 		this.area = area;
-		this.jobkey = jobkey;
+		this.jobKey = jobkey;
 	}
 	public int getJobid() {
 		return jobid;
@@ -67,15 +69,15 @@ public class JobDao{
 		this.area = area;
 	}
 	public String getJobkey() {
-		return jobkey;
+		return jobKey;
 	}
 	public void setJobkey(String jobkey) {
-		this.jobkey = jobkey;
+		this.jobKey = jobkey;
 	}
 	@Override
 	public String toString() {
 		return "JobDao [jobid=" + jobid + ", jobname=" + jobName + ", owner=" + owner + ", description=" + description
-				+ ", area=" + area + ", jobkey=" + jobkey + "]";
+				+ ", area=" + area + ", jobkey=" + jobKey + "]";
 	}
 	
 }
