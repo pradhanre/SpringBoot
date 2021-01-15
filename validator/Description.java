@@ -2,6 +2,7 @@ package com.tcs.rakesh.validator;
 
 import java.lang.annotation.Retention;
 
+
 import java.lang.annotation.Target;
 
 import javax.validation.Constraint;
@@ -16,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Description {
 
 	
-	 public String message() default "only contains alphabets and must be atleast 3 characters "; 
+	 public String message() default "only contains alphnumeric and must be atleast 5 characters "; 
 	//represents group of constraints     
      public Class<?>[] groups() default {};  
  //represents additional information about annotation  
