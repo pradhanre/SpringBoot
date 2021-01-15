@@ -1,4 +1,5 @@
 package com.tcs.rakesh.controller;
+
 import java.nio.file.FileAlreadyExistsException;
 import java.util.List;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,63 +29,61 @@ import com.tcs.rakesh.entity.JobDao;
 import com.tcs.rakesh.service.JobService;
 import org.json.JSONObject;
 
-
 @RestController
 public class JobController {
 
 	@Autowired
 	private JobService service;
-	
+
 	@PostMapping("/v1/job/{jobname}")
 	@Produces(MediaType.APPLICATION_JSON)
-	 @ResponseStatus(HttpStatus.CREATED)
-	public String addJob(@Valid@PathVariable("jobname") String jobname,@RequestBody JobDao job) throws FileAlreadyExistsException {
-		JSONObject json= new JSONObject();
-		UUID uuid=Generators.timeBasedGenerator().generate();		 
+	@ResponseStatus(HttpStatus.CREATED)
+	public String addJob(@Valid @PathVariable("jobname") String jobname, @RequestBody JobDao job)
+			throws FileAlreadyExistsException {
+		JSONObject json = new JSONObject();
+		UUID uuid = Generators.timeBasedGenerator().generate();
 		job.setJobkey(uuid.toString());
-		
-		JobDao jd=service.getJobByName(jobname);
-		if(jd!= null && job.getJobname()==jobname) {
+		JobDao jd = service.getJobByName(jobname);
+		if (jd != null && job.getJobname() == jobname) {
 			throw new FileAlreadyExistsException(jobname);
-		}
-		else {
+		} else {
 			job.setJobname(jobname);
 			service.saveJob(job);
-			
 			json.put("jobid", job.getJobid());
 			json.put("jobkey", job.getJobkey());
-					}
-		return json.toString();	
+		}
+		return json.toString();
 
-	} 
-	@GetMapping("/match/job/{jobid}")
-	public String authenication(@PathVariable("jobid") int jobid)  {
-		String result=null;
-		int a=jobid;
-		JobDao jd= service.getJobById(jobid);
-		
-		if(jd!= null && jd.getJobid()==a) {
-			result="Job exists";	
-			
-		}			
-		else {
-			result="Job doesn't exists";
+	}
+
+	@GetMapping("/v1/job/{jobid}/auth/{jobkey}")
+	@ResponseStatus(HttpStatus.FOUND)
+	public String authenication(@PathVariable("jobid") int jobid, @PathVariable("jobkey") String jobkey) {
+		String result = null;
+		int a = jobid;
+		String key = jobkey;
+		JobDao jd = service.getJobById(jobid);
+		JobDao jkey = service.getJobByKey(jobkey);
+		if ((jd != null && jd.getJobid() == a) && (jkey != null && jkey.getJobkey() == key)) {
+			result = "Job exists";
+		} else {
+
+			result = "Job doesn't exists";
 			throw new NotFoundException("Data Not Found");
-		}	
+		}
 		return result;
 	}
-	
+
 	@GetMapping("/jobs")
-	public List<JobDao> findAllJobs(){
+	public List<JobDao> findAllJobs() {
 		return service.getJobs();
 	}
-	 	
+
 	@GetMapping("/job/{jobid}")
-	public JobDao findJobByJobid(@PathVariable int jobid){
+	public JobDao findJobByJobid(@PathVariable int jobid) {
 		return service.getJobById(jobid);
 	}
-	
-		
+
 //	@GetMapping("/v1/job/{jobid}/auth/{authkey}")
 //	public String authenication(@PathVariable("jobid") String jobid,@PathVariable("authkey") String authkey){
 //		
@@ -91,27 +91,41 @@ public class JobController {
 //	}
 }
 
-
+   
 @ControllerAdvice
 class GlobalControllerExceptionHandler {
-    @ResponseStatus(HttpStatus.FORBIDDEN)  // 409
-    @ExceptionHandler(ConstraintViolationException.class)
-    public void handleConflict() {
-        // Nothing to do
-    }
-    
-    @ResponseStatus(HttpStatus.NOT_FOUND)  
-    @ExceptionHandler(NotFoundException.class)
-    public void notFound() {
-		
-        // Nothing to do
-    }
-  
-    @ResponseStatus(HttpStatus.FOUND)  
-    @ExceptionHandler(FileAlreadyExistsException.class)
-    public void fileExists() {
-		
-        // Nothing to do
-    }
+	@ResponseStatus(HttpStatus.FORBIDDEN) // 409
+	@ExceptionHandler(ConstraintViolationException.class)
+	public void handleConflict() {
+		// Nothing to do
+	}
 
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	@ExceptionHandler(NotFoundException.class)
+	public void notFound() {
+		
+		// Nothing to do
+	}
+
+//	protected ResponseEntity<Object> handleMissingServletRequestParameter(NotFoundException ex,
+//			HttpHeaders headers, HttpStatus status, WebRequest request) {
+//		String error = ex.getParameterName() + " parameter is missing";
+//
+//		ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage(), error);
+//		return new ResponseEntity<Object>(apiError, new HttpHeaders(), apiError.getStatus());
+//	}
+
+	@ResponseStatus(HttpStatus.FOUND)
+	@ExceptionHandler(FileAlreadyExistsException.class)
+	public void fileExists() {
+
+		// Nothing to do
+	}
+
+	@ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+	@ExceptionHandler(TransactionSystemException.class)
+	public void wrongJobName() {
+	System.out.println("Enter a valid username");
+		// Nothing to do
+	}
 }
